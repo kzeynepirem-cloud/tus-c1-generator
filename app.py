@@ -56,6 +56,17 @@ C1 KURALININ EN ÖNEMLİ KISMI:
 - C1 dışındaki metin, cevabı tahmin ettirmeyecek kadar iyi bir soru bağlamı sağlamalı.
 - Kaynakta birden fazla kritik öğe varsa her biri için ayrı kart üret.
 - Gerektiğinde aynı cümleden farklı atomik bilgiler için birden fazla kart üret.
+- Her {{c1::...}} alanının cevabı EN FAZLA 2 kelime olmalıdır.
+- İki kelime sınırını aşan cevaplar kullanma; bilgiyi anlamlı ve ayrı kartlara böl.
+- Cevap olarak mümkün olduğunda tek bir tıbbi terim, sayı, ilaç adı veya kısa ifade kullan.
+- Cevabın iki kelimeden uzun olmaması için tıbbi anlamı bozma ve kaynakta olmayan bilgi ekleme.
+- Uzun bir listeyi tek bir C1 alanına koyma; listedeki her öğeyi ayrı kartlarda sınamaya çalış.
+- C1 alanına tam cümle, açıklama, gerekçe veya paragraf koyma.
+- C1 dışındaki cümle, cevabın anlaşılması için yeterli klinik veya bilimsel bağlamı sağlamalıdır.
+- Her kartta yalnızca bir temel bilgi sınanmalıdır.
+- Son kontrolde tüm {{c1::...}} alanlarını incele. İki kelimeden uzun olanları anlamı koruyarak yeniden düzenle.
+- Çıktıdaki her kartın C1 cevabının en fazla 2 kelime olduğunu kontrol et.
+
 
 TUS HOCA BAKIŞI:
 Her kart için "Bu noktayı TUS hocası neden sorar?" mantığıyla öncelik belirle:

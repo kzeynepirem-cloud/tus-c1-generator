@@ -165,23 +165,26 @@ def clean_json(text: str) -> Dict[str, Any]:
         raise ValueError("Model geçerli JSON döndürmedi.")
     return json.loads(text[start:end+1])
 
-def call_model(client: OpenAI, model: str, prompt: str, max_output_tokens: int = 30000) -> Dict[str, Any]:
-    response = client.responses.create(
+def _groq_json_completion(client: OpenAI, model: str, system_prompt: str, prompt: str, max_output_tokens: int = 8192) -> Dict[str, Any]:
+    # Groq's OpenAI-compatible endpoint uses Chat Completions.
+    response = client.chat.completions.create(
         model=model,
-        instructions=SYSTEM_PROMPT,
-        input=prompt,
-        max_output_tokens=max_output_tokens,
+        messages=[
+            {"role": "system", "content": system_prompt + "\n\nYanıtın geçerli JSON olsun; Markdown kod çiti kullanma."},
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0.2,
+        max_tokens=max_output_tokens,
+        response_format={"type": "json_object"},
     )
-    return clean_json(response.output_text)
+    content = response.choices[0].message.content or "{}"
+    return clean_json(content)
 
-def audit_model(client: OpenAI, model: str, prompt: str, max_output_tokens: int = 20000) -> Dict[str, Any]:
-    response = client.responses.create(
-        model=model,
-        instructions=AUDIT_PROMPT,
-        input=prompt,
-        max_output_tokens=max_output_tokens,
-    )
-    return clean_json(response.output_text)
+def call_model(client: OpenAI, model: str, prompt: str, max_output_tokens: int = 8192) -> Dict[str, Any]:
+    return _groq_json_completion(client, model, SYSTEM_PROMPT, prompt, max_output_tokens)
+
+def audit_model(client: OpenAI, model: str, prompt: str, max_output_tokens: int = 8192) -> Dict[str, Any]:
+    return _groq_json_completion(client, model, AUDIT_PROMPT, prompt, max_output_tokens)
 
 def chunk_text(text: str, max_chars: int = 18000) -> List[str]:
     # Keep chunks sentence-aware.
@@ -237,18 +240,18 @@ st.caption("Metindeki sınanabilir bilgileri atomik parçalara ayırır → C1 �
 
 with st.sidebar:
     st.header("Ayarlar")
-    api_key = st.text_input("OpenAI API Key", type="password", value=os.getenv("OPENAI_API_KEY", ""))
-    model = st.text_input("Model", value=os.getenv("OPENAI_MODEL", "gpt-6-luna"))
+    api_key = st.text_input("Groq API Key", type="password", value=os.getenv("GROQ_API_KEY", ""))
+    model = st.text_input("Model", value=os.getenv("GROQ_MODEL", "openai/gpt-oss-20b"))
     chunk_size = st.slider("Parça boyutu", 8000, 24000, 18000, 1000)
     do_audit = st.checkbox("Kapsam denetimi + eksik kart tamamlama", value=True)
-    st.info("API anahtarını uygulamaya kaydetmiyorum; yalnızca bu oturumda kullanıyorum.")
+    st.info("Groq API anahtarını uygulamaya kaydetmiyorum; yalnızca bu oturumda kullanıyorum. Ücretsiz kullanım limitleri geçerlidir.")
 
 uploaded = st.file_uploader("Metni yükle", type=["txt", "md", "docx", "pdf"])
 pasted = st.text_area("veya metni buraya yapıştır", height=220, placeholder="TUS çalıştığın paragrafı buraya bırak...")
 
 if st.button("🚀 Tüm TUS noktalarını çıkar ve C1 üret", type="primary", use_container_width=True):
     if not api_key:
-        st.error("Önce OpenAI API Key gir.")
+        st.error("Önce Groq API Key gir.")
         st.stop()
 
     source = pasted.strip()
@@ -263,7 +266,7 @@ if st.button("🚀 Tüm TUS noktalarını çıkar ve C1 üret", type="primary", 
         st.warning("Bir metin yükle veya yapıştır.")
         st.stop()
 
-    client = OpenAI(api_key=api_key)
+    client = OpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
     chunks = chunk_text(source, chunk_size)
 
     all_facts, all_cards = [], []
